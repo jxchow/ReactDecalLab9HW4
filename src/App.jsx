@@ -18,6 +18,10 @@ class App extends React.Component {
 
     this.state = {
       // TODO 1
+      items: [],
+      nextItemId: 0,
+      sessionIsRunning: false,
+      itemIdRunning: null,
     };
   }
 
@@ -25,50 +29,97 @@ class App extends React.Component {
     const { nextItemId } = this.state;
     const newItem = {
       // TODO 2: initialize new item object
+      id: nextItemId,
+      description,
+      sessionsCompleted: 0,
+      isCompleted: false,
     };
-    this.setState((prevState => ({
+    this.setState((prevState) => ({
       // TODO 2: append new items to list and increase nextItemId by 1
-    })));
+      items: prevState.items.concat(newItem),
+      nextItemId: prevState.nextItemId + 1,
+    }));
   }
 
   clearCompletedItems() {
-    // TODO 6
+    let copy = [...this.state.items];
+    let result = copy.filter(item => item.isCompleted == false);
+    this.setState({
+          items: result
+        })
   }
 
   increaseSessionsCompleted(itemId) {
-    // TODO 5
+    let copy = [...this.state.items];
+    for(let i = 0; i < copy.length; i++) {
+        if(copy[i].id === itemId) {
+          copy[i].sessionsCompleted += 1; 
+        }
+    }
+    this.setState({
+          items: copy
+        })
   }
 
   toggleItemIsCompleted(itemId) {
-    // TODO 6
+    let copy = [...this.state.items];
+    for(let i = 0; i < copy.length; i++) {
+        if(copy[i].id === itemId) {
+          copy[i].isCompleted = !copy[i].isCompleted; 
+        }
+    }
+    this.setState({
+          items: copy
+        })
   }
 
   startSession(id) {
-    // TODO 4
+    this.setState({
+      sessionIsRunning: true,
+      itemIdRunning: id,
+      });
   }
 
   render() {
+    let areItemsMarkedAsCompleted = false;
     const {
       items,
       sessionIsRunning,
       itemIdRunning,
-      areItemsMarkedAsCompleted,
+      // areItemsMarkedAsCompleted,
     } = this.state;
+    let copy = this.state.items;
+    for(let i = 0; i < copy.length; i++) {
+        if(copy[i].isCompleted === true) {
+          areItemsMarkedAsCompleted = true;
+        }
+    }
     return (
       <div className="flex-wrapper">
         <div className="container">
           <header>
             <h1 className="heading">Today</h1>
-            <ClearButton onClick={this.clearCompletedItems} />
+            {areItemsMarkedAsCompleted && <ClearButton 
+              onClick={this.clearCompletedItems} 
+            />}
           </header>
-          {/* TODO 4 */}
-            {/* <Timer
+          {this.state.items.length == 0 &&
+          <EmptyState/>}
+          {sessionIsRunning && <Timer
               mode="WORK"
-              onSessionComplete={() => { console.log("complete") }}
+              onSessionComplete={() => {this.increaseSessionsCompleted(itemIdRunning)}}
               autoPlays
-            /> */}
+              key={itemIdRunning}
+            />}
             <div className="items-container">
-            {/* TODO 3:  display todo items */}
+              {this.state.items.map((item) => (
+                <TodoItem
+                  description={item.description}
+                  sessionsCompleted={item.sessionsCompleted}
+                  isCompleted={item.isCompleted}
+                  startSession={() => this.startSession(item.id)}
+                  toggleIsCompleted={() => this.toggleItemIsCompleted(item.id)}
+                  key={item.id}/>))}
             </div>
         </div>
         <footer>
